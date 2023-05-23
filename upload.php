@@ -21,21 +21,21 @@
         }
         return $json;
     }
-
-    $params = json_decode($_GET['metadata']);
+    $paramsString = $_GET['metadata'];
+    $params = json_decode($paramsString);
     $temporaryPath = __DIR__ . DIRECTORY_SEPARATOR . "temp" . DIRECTORY_SEPARATOR . $params->name;
     $path = pathinfo($temporaryPath);
     $jsonMeta = getMeta($temporaryPath);
     //echo $temporaryPath;
     //print_r($path);
     //print_r($jsonMeta);
-    $jsonParseMeta = json_decode($jsonMeta, true)[0];
-    $jsonParseMetaKeys = array_keys($jsonParseMeta);
-    if(array_key_exists("FileCreateDate", $jsonParseMeta)){
-        $date = $jsonParseMeta["FileCreateDate"];
-    } else{
-        $date = null;
-    }
+    // $jsonParseMeta = json_decode($jsonMeta, true)[0];
+    // $jsonParseMetaKeys = array_keys($jsonParseMeta);
+    // if(array_key_exists("FileCreateDate", $jsonParseMeta)){
+    //     $date = $jsonParseMeta["FileCreateDate"];
+    // } else{
+    //     $date = null;
+    // }
     
     set_error_handler("warning_handler", E_WARNING);
     $sha = hash_file("sha256", $temporaryPath);
@@ -60,16 +60,17 @@
     rename($temporaryPath, $VideoPath);
     $relativeVideoPath = "videos". DIRECTORY_SEPARATOR . $params->name;
 try{
-    $q = "INSERT INTO videos(id, date, location, filePath, jsonMeta, name, ext) VALUES(:id,:date,:loc,:path, :json, :name, :ext)";
+    $q = "INSERT INTO videos(id, date, location, filePath, jsonMeta, name, ext, videoMeta) VALUES(:id,:date,:loc,:path, :json, :name, :ext, :videoMeta)";
     $qu = $connection->prepare($q);
 
     $qu->bindParam(':id', $sha);
     $qu->bindParam(':ext', $path['extension']);
     $qu->bindParam(':name', $params->name);
-    $qu->bindParam(':date', $date);
+    $qu->bindParam(':date', $params->lastModified);
     $qu->bindParam(':loc', $loc);
     $qu->bindParam(':path', $relativeVideoPath);
     $qu->bindParam(':json', $jsonMeta);
+    $qu->bindParam(':videoMeta', $paramsString);
     $qu->execute(); 
     header('HTTP/1.1 200 OK');
     echo "Added";

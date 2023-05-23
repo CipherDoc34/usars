@@ -1,4 +1,4 @@
-use usar;
+-- use usar;
 -- CREATE TABLE videos(
 -- 	id varchar(20) NOT NULL primary key,
 --     date date NOT NULL,
@@ -34,7 +34,7 @@ use usar;
 
 -- delete from videos where id = "0516774b8a38d8b4cf7cc2727a3634e5ef6c5e9c97dbc8df160a002fea1e33c9";
 
-alter table videos modify date timestamp null;
+-- alter table videos modify date timestamp null;
 
 -- CREATE TABLE `videos` (
 --   `id` varchar(255) NOT NULL,
@@ -46,3 +46,9 @@ alter table videos modify date timestamp null;
 --   `ext` varchar(225) DEFAULT NULL,
 --   PRIMARY KEY (`id`)
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- alter table videos modify date bigint default(UNIX_TIMESTAMP());
+
+-- alter table videos add videoMeta varchar(4000);
+
+Select from_unixtime(1684187533);

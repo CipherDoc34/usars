@@ -1,9 +1,16 @@
 <!-- (A) UPLOAD BUTTON & FILE LIST -->
-<form>
-    <div id="list"></div>
-    <input type="button" id="pick" value="Upload">
-  </form>
-   
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<div id="list"></div>
+<input type="file" id="choose" value="Choose Files" multiple>
+<button id="upload">Upload</button>
+<div id="submitButton" hidden>
+</div>
+<div hidden>
+  <input id="pick" value="choose">
+</div>
+
+<div id="VideoMeta" hidden></div>
+
   <!-- (B) LOAD PLUPLOAD FROM CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/plupload/3.1.5/plupload.full.min.js"></script>
   <script>
@@ -11,6 +18,12 @@
   window.onload = () => {
     // (C1) GET HTML FILE LIST
     var list = document.getElementById("list");
+    const subbut = document.getElementById("submitButton");
+    const videoMetadata = document.getElementById("VideoMeta");
+
+    let submitButton = document.createElement("button", {id:"submitButton"});
+    submitButton.innerHTML = "SUBMIT";
+    subbut.appendChild(submitButton);
    
     // (C2) INIT PLUPLOAD
     var uploader = new plupload.Uploader({
@@ -19,15 +32,16 @@
       url: "upload-chunks.php",
       chunk_size: "10mb",
       init: {
-        PostInit: () => list.innerHTML = "<div>Ready</div>",
+        //PostInit: () => list.innerHTML = "<div>Ready</div>",
         FilesAdded: (up, files) => {
           plupload.each(files, file => {
             let row = document.createElement("div");
             row.id = file.id;
             row.innerHTML = `${file.name} (${plupload.formatSize(file.size)}) <strong></strong>`;
             list.appendChild(row);
+            //console.log(document.getElementById(file.name).innerHTML);
           });
-          uploader.start();
+          //uploader.start();
         },
         UploadProgress: (up, file) => {
           document.querySelector(`#${file.id} strong`).innerHTML = `${file.percent}%`;
@@ -39,8 +53,7 @@
 
         FileUploaded: (up, file, result) => {
           //const paramsJSON = {"name":file.name, "date":"1990-01-01", "loc":"Princess Street", "path":"videos/" + file.name};
-          const paramsJSON = {"name":file.name};
-          const params = JSON.stringify(paramsJSON);
+          const params = document.getElementById(file.name).innerHTML;
           const sendSQL = new XMLHttpRequest();
           const thisfile = file;
           sendSQL.onload = () => document.querySelector(`#${thisfile.id} strong`).innerHTML = sendSQL.responseText;
@@ -51,5 +64,44 @@
       }
     });
     uploader.init();
+    const uploadButton = document.getElementById('upload');
+    uploadButton.addEventListener('click', handleup);
+
+    function dateFormat(date){
+      var TimeZone = date.getTimezoneOffset()/60 * 100;
+      var TimeZoneHours;
+      var dateString = date.getFullYear() + ":" + date.getMonth() + ":" + date.getDate() + " ";
+      dateString += date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
+      dateString += TimeZone;
+      return dateString;
+    }
+
+    function handleup(event){
+      let fileList = document.getElementById('choose').files;
+      for(var i = 0; i < fileList.length; i++){
+        let row = document.createElement('div');
+        // let date = new Date(fileList[i]['lastModifiedDate']);
+        // console.log(fileList[i]['lastModifiedDate']);
+        // console.log(dateFormat(date));
+        // console.log(new Date("1999-02-02 12:30:40+0800"));
+        let videoData = {
+          name: fileList[i]['name'],
+          lastModifiedDate: fileList[i]['lastModifiedDate'],
+          lastModified: fileList[i]["lastModified"],
+          size: fileList[i]['size'],
+          type: fileList[i]['type']
+        }
+        row.id = fileList[i]['name'];
+        row.innerHTML = JSON.stringify(videoData);
+        videoMetadata.appendChild(row);
+        console.log(row.innerHTML);
+        uploader.addFile(fileList[i], fileList[i]['name']);
+      }
+      document.getElementById('choose').value = '';
+      $(document.getElementById("submitButton")).show();
+    }
+
+    subbut.addEventListener('click', (event) => {uploader.start()});
+
   };
   </script>
