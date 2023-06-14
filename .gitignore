@@ -1,17 +1,3 @@
 temp/
 uploads/
 videos/
-sample.geojson
-sample.gpx
-temp.fmt
-test.json
-test.md
-test.php
-testmp4.txt
-testmp4force.txt
-testmp4php.txt
-readvideos.php
-upload-sha256.php
-upload-checkhash.php
-index.php
-videometa.html
