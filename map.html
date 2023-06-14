@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+ @license
+ Copyright 2019 Google LLC. All Rights Reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+
+<head>
+    <title>VIDEO MAP</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <!-- jsFiddle will insert css and js -->
+</head>
+<style>
+    /**
+    * @license
+    * Copyright 2019 Google LLC. All Rights Reserved.
+    * SPDX-License-Identifier: Apache-2.0
+    */
+    /* 
+    * Always set the map height explicitly to define the size of the div element
+    * that contains the map. 
+    */
+    #map {
+        height: 100%;
+    }
+
+    /* 
+    * Optional: Makes the sample page fill the window. 
+    */
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<body>
+    <div id="map"></div>
+    <script>
+        const getPath = (video, callback) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("readystatechange",  () => {
+                if (request.readyState === 4 && request.status === 200) {
+                    let data = JSON.parse(request.responseText);
+                    callback(undefined, data);
+                } else if (request.readyState === 4) {
+                    callback("could not fetch data", undefined);
+                }});
+            request.open("GET", "/usars/getGeoData.php?args=" + video, true);
+            request.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+            request.send();
+        }
+        function initMap() {
+            // const flightPlanCoordinates = [{ "lat": 44.247493333333, "lng": -76.519649666667 },{ "lat": 44.247453, "lng": -76.519915833333 },{ "lat": 44.247400166667, "lng": -76.520170666667 },{ "lat": 44.247335833333, "lng": -76.520409833333 },{ "lat": 44.247275333333, "lng": -76.520661333333 },{ "lat": 44.247192666667, "lng": -76.520901333333 },{ "lat": 44.2470785, "lng": -76.521084166667 },{ "lat": 44.246993, "lng": -76.521186833333 },{ "lat": 44.246953, "lng": -76.521235833333 },{ "lat": 44.246946666667, "lng": -76.521329333333 },{ "lat": 44.2469935, "lng": -76.5214545 },{ "lat": 44.247070333333, "lng": -76.521623166667 },{ "lat": 44.247164333333, "lng": -76.521835666667 },{ "lat": 44.2472695, "lng": -76.522068833333 },{ "lat": 44.247376, "lng": -76.522300666667 },{ "lat": 44.247473833333, "lng": -76.522494 },{ "lat": 44.247593833333, "lng": -76.522626833333 },{ "lat": 44.247708, "lng": -76.522667333333 },{ "lat": 44.2478265, "lng": -76.522691333333 },{ "lat": 44.247915166667, "lng": -76.5227005 },{ "lat": 44.247941333333, "lng": -76.522707833333 },{ "lat": 44.247938333333, "lng": -76.522714333333 },{ "lat": 44.247909166667, "lng": -76.522716333333 },{ "lat": 44.247875666667, "lng": -76.5227025 },{ "lat": 44.247853166667, "lng": -76.5226685 },{ "lat": 44.247848833333, "lng": -76.522638333333 },{ "lat": 44.2478545, "lng": -76.5226135 },{ "lat": 44.247857166667, "lng": -76.522595666667 }, { "lat": 44.24786, "lng": -76.522597333333 }, { "lat": 44.247863833333, "lng": -76.522598333333 }];
+            // let bounds = new google.maps.LatLngBounds();
+            // for (let i = 0; i < flightPlanCoordinates.length; i++){
+            //     bounds.extend(flightPlanCoordinates[i]);
+            // }
+
+            const map = new google.maps.Map(document.getElementById("map"), {
+                //zoom: 8,
+                //center: flightPlanCoordinates[Math.floor(flightPlanCoordinates.length/2)],
+                //center: bounds.getCenter(),
+                mapTypeId: "terrain",
+            });
+            const flightPath = new google.maps.Polyline({
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+            });
+            flightPath.setMap(map);
+            let videoQuery = new URLSearchParams(window.location.search);
+            getPath(videoQuery.get("video"), (err, data)=>{
+                flightPath.setPath(data);
+                let bounds = new google.maps.LatLngBounds();
+
+                for (let i = 0; i < data.length; i++) bounds.extend(data[i]);
+
+                map.fitBounds(bounds);
+            });
+        }
+
+        window.initMap = initMap;
+    </script>
+    <script>
+        let GoogleScript = document.createElement("script");
+        let URLQuery = new URLSearchParams(window.location.search);
+        GoogleScript.setAttribute("src", "https://maps.googleapis.com/maps/api/js?key="+URLQuery.get("key") +"&callback=initMap&v=weekly");
+        document.body.appendChild(GoogleScript);
+    </script>
+
+</body>
+
+</html>

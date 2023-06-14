@@ -31,7 +31,7 @@ include("config.php");
      $fetchVideos->execute();
      while($row = $fetchVideos->fetch()){
        $path = $row['filePath'];
-       $name = $row['id'];
+       $name = $row['name'];
        $pathtoFile = '"'.$row['filePath'].'"';
        $toDelete = '"'.$row['id'].'"';
        echo "<div style='float: left; margin-right: 5px;'>

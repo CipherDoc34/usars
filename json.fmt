@@ -1,0 +1,4 @@
+#[HEAD] [ {"exifCreator":"php"}
+#[IF]  $gpslatitude $gpslongitude $SampleTime
+#[BODY] ,{"Latitude":$gpslatitude#, "Longitude":$gpslongitude#, "TimeStamp":$SampleTime#}
+#[TAIL] ]
