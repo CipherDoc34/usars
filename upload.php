@@ -98,7 +98,6 @@
     rename($temporaryPath, $VideoPath);
     $relativeVideoPath = "videos". DIRECTORY_SEPARATOR . $params->name;
 try{
-    if(!insertGeoJson(json_decode($jsonGeoMeta, true), $sha, $connection)) FileError($relativeVideoPath, "No GEO Data, File Removed");
     $q = "INSERT INTO videos
     (id, date, longitude, latitude, filePath, jsonMeta, name, ext, videoMeta, creator) 
     VALUES(:id, :date, :long, :lat, :path, :json, :name, :ext, :videoMeta, :creator)";
@@ -116,6 +115,7 @@ try{
     $qu->bindParam(':videoMeta', $paramsString);
     $qu->bindParam(':creator', $creator);
     $qu->execute(); 
+    if(!insertGeoJson(json_decode($jsonGeoMeta, true), $sha, $connection)) FileError($relativeVideoPath, "No GEO Data, File Removed");
     header('HTTP/1.1 200 OK');
     echo "Added";
 }
