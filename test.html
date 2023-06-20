@@ -1,14 +1,19 @@
 <html>
   <head>
     <style>
-          /* 
-    * Always set the map height explicitly to define the size of the div element
-    * that contains the map. 
-    */
+    #container {
+      height: 100%;
+      width: 75%;
+      float: left;
+    }
     #map {
       height: 100%;
+      width: 65%;
+      float:left;
     }
-
+    #rightContainer {
+      float:right;
+    }
     /* 
     * Optional: Makes the sample page fill the window. 
     */
@@ -19,12 +24,12 @@
       padding: 0;
     }
     </style>
-    <title>Event Click LatLng</title>
+    <title>Query</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-
-    <link rel="stylesheet" type="text/css" href="./style.css" />
     <script>
     function initMap() {
+      $('calander').hide();
       const myLatlng = { "lat": 44.237585669258515, "lng": -76.50587240389301};
       const map = new google.maps.Map(document.getElementById("map"), {
         zoom: 14,
@@ -35,10 +40,10 @@
         drawingControlOptions: {
             position: google.maps.ControlPosition.LEFT_BOTTOM,
             drawingModes: [
-            google.maps.drawing.OverlayType.MARKER,
-            google.maps.drawing.OverlayType.CIRCLE,
+            //google.maps.drawing.OverlayType.MARKER,
+            //google.maps.drawing.OverlayType.CIRCLE,
             google.maps.drawing.OverlayType.POLYGON,
-            google.maps.drawing.OverlayType.POLYLINE,
+            //google.maps.drawing.OverlayType.POLYLINE,
             google.maps.drawing.OverlayType.RECTANGLE
             
             ]
@@ -46,78 +51,100 @@
     });
 
     google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
-        var position = marker.getPosition().toUrlValue(2);
-    
-        $('#marker-position1').append(position + '<br>'+position1);
+      var position = marker.getPosition().toUrlValue(2);
+      $('#marker-position1').append(position + '<br>'+position1);
     });
+
     google.maps.event.addListener(drawingManager, 'circlecomplete', function (circle) {
-    var radius = circle.getRadius();
-        var latt = circle.getCenter().lat();
-            var longg = circle.getCenter().lng();
-    
-    
-        $('#marker-position').append(radius + '<br>'+latt+'<br>'+longg);
+      var radius = circle.getRadius();
+      var latt = circle.getCenter().lat();
+      var longg = circle.getCenter().lng();
+      $('#marker-position').append(radius + '<br>'+latt+'<br>'+longg);
     });
+
     google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
-    var radius = rectangle.getBounds();
-        
-    
-
-        $('#marker-position').append(radius + '<br>');
+      var radius = rectangle.getBounds();
+      $('#marker-position').append(radius + '<br>');
     });
+
     google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
-    var polygonBounds = polygon.getPath();
-
-            for(var i = 0 ; i < polygonBounds.length ; i++)
-            {
-                coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
-    alert(JSON.stringify(coordinates, null, 6));
-                
-            }
-        
+      var polygonBounds = polygon.getPath();
+      for(var i = 0 ; i < polygonBounds.length ; i++)
+        coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
+      //alert(JSON.stringify(coordinates, null, 6));
+      document.getElementById("location").innerText = JSON.stringify(polygonBounds.g)
     });
-    google.maps.event.addListener(drawingManager, 'polylinecomplete', function (line ) {
-    var polygonBounds = line .getPath();
 
-            for(var i = 0 ; i < polygonBounds.length ; i++)
-            {
-                coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
-    alert(JSON.stringify(coordinates, null, 6));
-                
-            }
-        
+    google.maps.event.addListener(drawingManager, 'polylinecomplete', function (line) {
+      var polygonBounds = line.getPath();
+      for(var i = 0 ; i < polygonBounds.length ; i++){
+        coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
+        alert(JSON.stringify(coordinates, null, 6));
+      }
     });
+
     drawingManager.setMap(map);
-
-      // Create the initial InfoWindow.
-      let infoWindow = new google.maps.InfoWindow({
-        content: "Click the map to get Lat/Lng!",
-        position: myLatlng,
-      });
+      // // Create the initial InfoWindow.
+      // let infoWindow = new google.maps.InfoWindow({
+      //   content: "Click the map to get Lat/Lng!",
+      //   position: myLatlng,
+      // });
     
-      infoWindow.open(map);
-      // Configure the click listener.
-      map.addListener("click", (mapsMouseEvent) => {
-        // Close the current InfoWindow.
-        infoWindow.close();
-        // Create a new InfoWindow.
-        infoWindow = new google.maps.InfoWindow({
-          position: mapsMouseEvent.latLng,
-        });
-        infoWindow.setContent(
-          JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
-        );
-        infoWindow.open(map);
-      });
+      // infoWindow.open(map);
+      // // Configure the click listener.
+      // map.addListener("click", (mapsMouseEvent) => {
+      //   // Close the current InfoWindow.
+      //   infoWindow.close();
+      //   // Create a new InfoWindow.
+      //   infoWindow = new google.maps.InfoWindow({
+      //     position: mapsMouseEvent.latLng,
+      //   });
+      //   infoWindow.setContent(
+      //     JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
+      //   );
+      //   infoWindow.open(map);
+      // });
 
-      map.addListener("click", (mapsMouseEvent) )
+      // map.addListener("click", (mapsMouseEvent) )
     }
-    
+    async function getVideos(){
+      console.log(document.getElementById("location").innerText);
+      let locationBounds = JSON.parse(document.getElementById("location").innerText);
+      console.log(Date.parse(new Date(document.getElementById("datelo").value)));
+
+      let locationargs = [];
+
+      locationBounds.forEach(element => {
+        locationargs.push([element.lat, element.lng]);
+      });
+      //alert(JSON.stringify(locationargs));
+      let args = {
+        datetime:[Date.parse(new Date(document.getElementById("datelo").value)), Date.parse(new Date(document.getElementById("datehi").value))],
+        location: locationargs
+      }
+      return await fetch("/usars/getvideos.php?args=" + JSON.stringify(args));
+    }
+    function submit(){
+      getVideos().then((value)=>{ 
+        value.json().then((data) => document.getElementById("response").innerHTML = JSON.stringify(data));
+      });
+    }
     window.initMap = initMap;
     </script>
   </head>
   <body>
+    <div id="container">
     <div id="map"></div>
+    <div id="rightContainer">
+      <div id="calander">
+        <input type="datetime-local" id="datelo">
+        <input type="datetime-local" id="datehi">
+        <button onclick="submit()">Submit</button>
+      </div>
+      <div id="response"></div>
+      <div id="location" hidden="true"></div>
+    </div>
+  </div>
 
     <!-- 
       The `defer` attribute causes the callback to execute after the full HTML
@@ -127,7 +154,7 @@
       for more information.
       -->
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBpROZXALVoDka5FQ3WNIv0iEq1ep81Ll4&libraries=drawing&callback=initMap&v=weekly"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsIBXY2Z5CT-f636kzKfNIUK8iUPnKzVM&libraries=drawing&callback=initMap&v=weekly"
       defer
     ></script>
   </body>
