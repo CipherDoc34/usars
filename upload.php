@@ -1,8 +1,6 @@
 <?php
     include "config.php";
-    //////////// TEMP //////////
-    //$loc = "params->location";
-
+    
     header("Content-Type: application/json; charset=UTF-8");
     function warning_handler($errno, $errstr) { 
         header('HTTP/1.1 500 FILE NOT FOUND');

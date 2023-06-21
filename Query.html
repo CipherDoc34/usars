@@ -14,9 +14,6 @@
     #rightContainer {
       float:right;
     }
-    /* 
-    * Optional: Makes the sample page fill the window. 
-    */
     html,
     body {
       height: 100%;
@@ -117,7 +114,6 @@
       locationBounds.forEach(element => {
         locationargs.push([element.lat, element.lng]);
       });
-      //alert(JSON.stringify(locationargs));
       let args = {
         datetime:[Date.parse(new Date(document.getElementById("datelo").value)), Date.parse(new Date(document.getElementById("datehi").value))],
         location: locationargs
@@ -145,17 +141,17 @@
       <div id="location" hidden="true"></div>
     </div>
   </div>
-
-    <!-- 
-      The `defer` attribute causes the callback to execute after the full HTML
-      document has been parsed. For non-blocking uses, avoiding race conditions,
-      and consistent behavior across browsers, consider loading using Promises.
-      See https://developers.google.com/maps/documentation/javascript/load-maps-js-api
-      for more information.
-      -->
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsIBXY2Z5CT-f636kzKfNIUK8iUPnKzVM&libraries=drawing&callback=initMap&v=weekly"
-      defer
-    ></script>
+    <script>
+      async function getgoogleapikey(){
+        const response = await fetch("/usars/getgooglemapsapikey.php");
+        const key = await response.json();
+        return key;
+      }
+      getgoogleapikey().then((data) => {
+        let GoogleScript = document.createElement("script");
+        GoogleScript.setAttribute("src", "https://maps.googleapis.com/maps/api/js?key=" + data[0]['key'] + "&libraries=drawing&callback=initMap&v=weekly");
+        document.body.appendChild(GoogleScript);
+      });
+    </script>
   </body>
 </html>

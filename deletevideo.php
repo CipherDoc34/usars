@@ -25,20 +25,19 @@ include("config.php");
         unlink($path['filePath']);
         header('location: deletevideo.php');
         exit;
-
      }
      $fetchVideos = $connection->prepare("SELECT * FROM videos ORDER BY id DESC");
      $fetchVideos->execute();
      while($row = $fetchVideos->fetch()){
        $path = $row['filePath'];
        $name = $row['name'];
-       $pathtoFile = '"'.$row['filePath'].'"';
+       $pathtoFile = '"'.'"';
        $toDelete = '"'.$row['id'].'"';
        echo "<div style='float: left; margin-right: 5px;'>
           <video src='".$path."' controls width='320px' height='320px' ></video>     
           <br>
           <span>".$name."</span>
-          <button type='button' onclick='openModal(".$toDelete.",".$pathtoFile.")'>Delete</button>
+          <button type='button' onclick='openModal(".$toDelete.",".json_encode($path).")'>Delete</button>
        </div>";
      }
      ?>
@@ -65,8 +64,8 @@ include("config.php");
   </div>
   <script>
     function openModal(name, path){
-      console.log(name);
-      console.log(path);
+      //console.log(name);
+      //console.log(path);
       let modalbody = "<form method='post' action='' enctype='multipart/form-data' id='FormDelete'><input type='hidden' value='"
                         + name +"' name='id'></form>" + 
                         "<video src='"+path+"' controls width='320px' height='320px' ></video>"
