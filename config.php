@@ -1,7 +1,7 @@
 <?php
 $environment = 'RAILWAY';
 
-if(true){
+if(false){
     $host = "containers-us-west-158.railway.app"; /* Host name */
     $user = "root"; /* User */
     $password = getenv('USARSRootPassRailway'); /* Password */
