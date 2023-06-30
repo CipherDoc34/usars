@@ -1,13 +1,16 @@
 <?php
     include "config.php";
-    
     header("Content-Type: application/json; charset=UTF-8");
-    function warning_handler($errno, $errstr) { 
+    
+    function warning_handler($errno, $errstr) 
+    { 
         header('HTTP/1.1 500 FILE NOT FOUND');
         echo $errstr;
         die();
     }
-    function getMeta($path){
+
+    function getMeta($path)
+    {
         $output = null;
         $retval = null;
         $command = "exif.exe -j -ee -n " . $path;
@@ -19,7 +22,9 @@
         }
         return $json;
     }
-    function getGeoMeta($path){
+
+    function getGeoMeta($path)
+    {
         $output = null;
         $retval = null;
         $command = "exif.exe -p json.fmt -ee " . $path;
@@ -31,14 +36,17 @@
         }
         return $json;
     }
-    function FileError($path, $error){
+
+    function FileError($path, $error)
+    {
         header('HTTP/1.1 500 INTERNAL SERVER ERROR');
         echo $error;
         if($path) unlink($path);
         die();
     }
 
-    function insertGeoJson($json, $vidID, $connection){
+    function insertGeoJson($json, $vidID, $connection)
+    {
         $q = "INSERT into `geo_location` (videoID, timestamp, longitude, latitude) 
             values (:vidid, :time, :long, :lat)";
         $qu = $connection->prepare($q);
@@ -64,13 +72,18 @@
 
     $jsonParseMeta = json_decode($jsonMeta, true)[0];
     $jsonParseMetaKeys = array_keys($jsonParseMeta);
-    if(array_key_exists("GPSLatitude", $jsonParseMeta) && array_key_exists("GPSLongitude", $jsonParseMeta)){
+
+    if(array_key_exists("GPSLatitude", $jsonParseMeta) && array_key_exists("GPSLongitude", $jsonParseMeta))
+    {
         $loclo = $jsonParseMeta["GPSLongitude"];
         $locla = $jsonParseMeta["GPSLatitude"];
-    } else{
+    } 
+    else
+    {
         $loclo = null;
         $locla = null;
     }
+
     $creator = "exif";
 
     set_error_handler("warning_handler", E_WARNING);
@@ -80,47 +93,71 @@
     $q = $connection->prepare('Select id from videos where :hash = videos.id');
     $q->bindParam(":hash", $sha);
     $q->execute();
-    if(sizeof($q->fetchAll())){
+    if(sizeof($q->fetchAll()))
+    {
         header('HTTP/1.1 500 INTERNAL SERVER ERROR');
         unlink($temporaryPath);
         echo "Video Already Exists";
         die();
     }
+
     $folderPath = __DIR__ . DIRECTORY_SEPARATOR . "videos";
-    if (!file_exists($folderPath)) { if (!mkdir($folderPath, 0777, true)) {
+
+    if (!file_exists($folderPath)) 
+    { 
+        if (!mkdir($folderPath, 0777, true)) 
+        {
+            header('HTTP/1.1 500 INTERNAL SERVER ERROR');
+            echo "ERROR";
+            die();
+        }
+    }
+
+    $VideoPath = $folderPath . DIRECTORY_SEPARATOR . $params->dateString;
+    
+    if (!file_exists($VideoPath))
+    {
+        if(!mkdir($VideoPath, 0777, true))
+        {
+            header('HTTP/1.1 500 INTERNAL SERVER ERROR');
+            echo "ERROR";
+            die();
+        }
+    }
+
+    rename($temporaryPath, $VideoPath . DIRECTORY_SEPARATOR . $params->name);
+    $relativeVideoPath = "videos". DIRECTORY_SEPARATOR . $params->dateString . DIRECTORY_SEPARATOR . $params->name;
+
+    try
+    {
+        $connection->beginTransaction();
+        $q = "INSERT INTO videos
+        (id, date, longitude, latitude, filePath, jsonMeta, name, ext, videoMeta, creator) 
+        VALUES(:id, :date, :long, :lat, :path, :json, :name, :ext, :videoMeta, :creator)";
+
+        $qu = $connection->prepare($q);
+        $qu->bindParam(':id', $sha);
+        $qu->bindParam(':ext', $path['extension']);
+        $qu->bindParam(':name', $params->name);
+        $qu->bindParam(':date', $params->lastModified);
+        $qu->bindParam(':long', $loclo);
+        $qu->bindParam(':lat', $locla);
+        $qu->bindParam(':path', $relativeVideoPath);
+        $qu->bindParam(':json', $jsonMeta);
+        $qu->bindParam(':videoMeta', $paramsString);
+        $qu->bindParam(':creator', $creator);
+        $qu->execute(); 
+        if(!insertGeoJson(json_decode($jsonGeoMeta, true), $sha, $connection)) FileError($relativeVideoPath, "No GEO Data, File Removed");
+        header('HTTP/1.1 200 OK');
+        $connection->commit();
+        echo ", Video Added";
+    }
+    catch(PDOException $e)
+    {
         header('HTTP/1.1 500 INTERNAL SERVER ERROR');
-        echo "ERROR";
+        //echo "Something went wrong " . $e->getMessage();
+        FileError($relativeVideoPath, "Something went wrong " . $e->getMessage());
+        $connection->rollBack();
         die();
-    }}
-    $VideoPath = $folderPath . DIRECTORY_SEPARATOR . $params->name;
-    rename($temporaryPath, $VideoPath);
-    $relativeVideoPath = "videos". DIRECTORY_SEPARATOR . $params->name;
-try{
-    $q = "INSERT INTO videos
-    (id, date, longitude, latitude, filePath, jsonMeta, name, ext, videoMeta, creator) 
-    VALUES(:id, :date, :long, :lat, :path, :json, :name, :ext, :videoMeta, :creator)";
-
-    $qu = $connection->prepare($q);
-
-    $qu->bindParam(':id', $sha);
-    $qu->bindParam(':ext', $path['extension']);
-    $qu->bindParam(':name', $params->name);
-    $qu->bindParam(':date', $params->lastModified);
-    $qu->bindParam(':long', $loclo);
-    $qu->bindParam(':lat', $locla);
-    $qu->bindParam(':path', $relativeVideoPath);
-    $qu->bindParam(':json', $jsonMeta);
-    $qu->bindParam(':videoMeta', $paramsString);
-    $qu->bindParam(':creator', $creator);
-    $qu->execute(); 
-    if(!insertGeoJson(json_decode($jsonGeoMeta, true), $sha, $connection)) FileError($relativeVideoPath, "No GEO Data, File Removed");
-    header('HTTP/1.1 200 OK');
-    echo "Added";
-}
-catch(PDOException $e){
-    header('HTTP/1.1 500 INTERNAL SERVER ERROR');
-    //echo "Something went wrong " . $e->getMessage();
-    FileError($relativeVideoPath, "Something went wrong " . $e->getMessage());
-    die();
-}
+    }
 ?>

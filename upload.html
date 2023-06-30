@@ -80,16 +80,14 @@
       let fileList = document.getElementById('choose').files;
       for(var i = 0; i < fileList.length; i++){
         let row = document.createElement('div');
-        // let date = new Date(fileList[i]['lastModifiedDate']);
-        // console.log(fileList[i]['lastModifiedDate']);
-        // console.log(dateFormat(date));
-        // console.log(new Date("1999-02-02 12:30:40+0800"));
+        let date = new Date(fileList[i]['lastModified']);
         let videoData = {
           name: fileList[i]['name'],
           lastModifiedDate: fileList[i]['lastModifiedDate'],
           lastModified: fileList[i]["lastModified"],
           size: fileList[i]['size'],
-          type: fileList[i]['type']
+          type: fileList[i]['type'],
+          dateString: date.getUTCFullYear() + "-" + date.getUTCMonth() + "-" + date.getUTCDate()
         }
         row.id = fileList[i]['name'];
         row.innerHTML = JSON.stringify(videoData);
