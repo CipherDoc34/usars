@@ -25,99 +25,53 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script>
-    function initMap() {
+    function initMap() 
+    {
       $('calander').hide();
       const myLatlng = { "lat": 44.237585669258515, "lng": -76.50587240389301};
       const map = new google.maps.Map(document.getElementById("map"), {
         zoom: 14,
         center: myLatlng,
       });
-    var coordinates = [];
-    var drawingManager = new google.maps.drawing.DrawingManager({
+      var drawingManager = new google.maps.drawing.DrawingManager({
         drawingControlOptions: {
-            position: google.maps.ControlPosition.LEFT_BOTTOM,
-            drawingModes: [
-            //google.maps.drawing.OverlayType.MARKER,
-            //google.maps.drawing.OverlayType.CIRCLE,
+          position: google.maps.ControlPosition.LEFT_BOTTOM,
+          drawingModes: [
             google.maps.drawing.OverlayType.POLYGON,
-            //google.maps.drawing.OverlayType.POLYLINE,
             google.maps.drawing.OverlayType.RECTANGLE
-            
-            ]
+          ]
         }
-    });
+      });
 
-    google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
-      var position = marker.getPosition().toUrlValue(2);
-      $('#marker-position1').append(position + '<br>'+position1);
-    });
+      google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
+        var rect = rectangle.getBounds();
+        var coords = rect.toJSON();
+        var coordinates = [
+          {
+            lng: coords.east,
+            lat: coords.north
+          },
+          {
+            lng: coords.west,
+            lat: coords.south
+          }
+        ];
+        document.getElementById("location").innerText = JSON.stringify(coordinates);
+      });
 
-    google.maps.event.addListener(drawingManager, 'circlecomplete', function (circle) {
-      var radius = circle.getRadius();
-      var latt = circle.getCenter().lat();
-      var longg = circle.getCenter().lng();
-      $('#marker-position').append(radius + '<br>'+latt+'<br>'+longg);
-    });
+      google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
+        var polygonBounds = polygon.getPath();
+        document.getElementById("location").innerText = JSON.stringify(polygonBounds.g)
+      });
 
-    google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
-      var radius = rectangle.getBounds();
-      $('#marker-position').append(radius + '<br>');
-    });
-
-    google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
-      var polygonBounds = polygon.getPath();
-      for(var i = 0 ; i < polygonBounds.length ; i++)
-        coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
-      //alert(JSON.stringify(coordinates, null, 6));
-      document.getElementById("location").innerText = JSON.stringify(polygonBounds.g)
-    });
-
-    google.maps.event.addListener(drawingManager, 'polylinecomplete', function (line) {
-      var polygonBounds = line.getPath();
-      for(var i = 0 ; i < polygonBounds.length ; i++){
-        coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
-        alert(JSON.stringify(coordinates, null, 6));
-      }
-    });
-
-    drawingManager.setMap(map);
-      // // Create the initial InfoWindow.
-      // let infoWindow = new google.maps.InfoWindow({
-      //   content: "Click the map to get Lat/Lng!",
-      //   position: myLatlng,
-      // });
-    
-      // infoWindow.open(map);
-      // // Configure the click listener.
-      // map.addListener("click", (mapsMouseEvent) => {
-      //   // Close the current InfoWindow.
-      //   infoWindow.close();
-      //   // Create a new InfoWindow.
-      //   infoWindow = new google.maps.InfoWindow({
-      //     position: mapsMouseEvent.latLng,
-      //   });
-      //   infoWindow.setContent(
-      //     JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
-      //   );
-      //   infoWindow.open(map);
-      // });
-
-      // map.addListener("click", (mapsMouseEvent) )
+      drawingManager.setMap(map);
     }
     async function getVideos(){
-      console.log(document.getElementById("location").innerText);
       let locationBounds = JSON.parse(document.getElementById("location").innerText);
-      console.log(Date.parse(new Date(document.getElementById("datelo").value)));
-
       let locationargs = [];
-
-      locationBounds.forEach(element => {
-        locationargs.push([element.lat, element.lng]);
-      });
-      // let args = {
-      //   datetime:[Date.parse(new Date(document.getElementById("datelo").value)), Date.parse(new Date(document.getElementById("datehi").value))],
-      //   location: locationargs
-      // }
+      locationBounds.forEach(element => 
+        locationargs.push([element.lat, element.lng])
+      );
       let args = {
         dateStart: document.getElementById("datelo").value ,
         dateEnd:document.getElementById("datehi").value,
@@ -125,10 +79,7 @@
         model:'model1'
       };
       let formdata = "";
-      for(var prop in args)
-        formdata += (prop + "=" + args[prop] + "&" );
-
-      console.log(formdata)
+      for(var prop in args) formdata += (prop + "=" + args[prop] + "&" );
 
       const request = new Request("http://localhost:8000/api/getpred", {
             method: "POST",
@@ -137,10 +88,6 @@
               "Content-Type": 'application/x-www-form-urlencoded',
             },
         });
-        // body: "dateStart:" + document.getElementById("datelo").value +  "," +
-        // "dateEnd:" + document.getElementById("datehi").value + "," +
-        //         "location:" +locationargs + "," +
-        //         "model:'model1'",
       return await fetch(request);
     }
     function submit(){

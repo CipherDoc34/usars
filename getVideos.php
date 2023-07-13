@@ -32,9 +32,16 @@ function GetFileVideo($time, $location, &$ret)
             g.longitude >= :y1 AND
             g.longitude <= :y2;"
         );
+        
+        $timelo = $time[0];
+        $timehi = $time[1];
+        if ($timelo/1000000000000 < 1)
+            $timelo *= 1000;
+        if ($timehi/1000000000000 < 1)
+            $timehi *= 1000;
 
-        $qu->bindParam(":datelo", $time[0]);
-        $qu->bindParam(":datehi", $time[1]);
+        $qu->bindParam(":datelo", $timelo);
+        $qu->bindParam(":datehi", $timehi);
         $qu->bindParam(":x1", $location[0]);
         $qu->bindParam(":x2", $location[1]);
         $qu->bindParam(":y1", $location[2]);

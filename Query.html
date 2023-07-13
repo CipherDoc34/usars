@@ -32,7 +32,6 @@
         zoom: 14,
         center: myLatlng,
       });
-    var coordinates = [];
     var drawingManager = new google.maps.drawing.DrawingManager({
         drawingControlOptions: {
             position: google.maps.ControlPosition.LEFT_BOTTOM,
@@ -60,15 +59,27 @@
     });
 
     google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
-      var radius = rectangle.getBounds();
-      $('#marker-position').append(radius + '<br>');
+      var rect = rectangle.getBounds();
+      var coords = rect.toJSON();
+      var coordinates = [
+        {
+          lng: coords.east,
+          lat: coords.north
+        },
+        {
+          lng: coords.west,
+          lat: coords.south
+        }
+      ];
+      document.getElementById("location").innerText = JSON.stringify(coordinates);
     });
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
       var polygonBounds = polygon.getPath();
-      for(var i = 0 ; i < polygonBounds.length ; i++)
-        coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
-      //alert(JSON.stringify(coordinates, null, 6));
+      // for(var i = 0 ; i < polygonBounds.length ; i++)
+      //   coordinates.push(polygonBounds.getAt(i).lat(), polygonBounds.getAt(i).lng());
+      // alert(JSON.stringify(coordinates, null, 6));
+      // alert(JSON.stringify(polygonBounds));
       document.getElementById("location").innerText = JSON.stringify(polygonBounds.g)
     });
 
@@ -105,9 +116,9 @@
       // map.addListener("click", (mapsMouseEvent) )
     }
     async function getVideos(){
-      console.log(document.getElementById("location").innerText);
+      // console.log(document.getElementById("location").innerText);
       let locationBounds = JSON.parse(document.getElementById("location").innerText);
-      console.log(Date.parse(new Date(document.getElementById("datelo").value)));
+      // console.log(Date.parse(new Date(document.getElementById("datelo").value)));
 
       let locationargs = [];
 
