@@ -25,11 +25,14 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script>
+    let map;
+    let all_overlays = [];
+    let all_markers = [];
     function initMap() 
     {
       $('calander').hide();
       const myLatlng = { "lat": 44.237585669258515, "lng": -76.50587240389301};
-      const map = new google.maps.Map(document.getElementById("map"), {
+      map = new google.maps.Map(document.getElementById("map"), {
         zoom: 14,
         center: myLatlng,
       });
@@ -44,6 +47,7 @@
       });
 
       google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
+        all_overlays.push(rectangle);
         var rect = rectangle.getBounds();
         var coords = rect.toJSON();
         var coordinates = [
@@ -60,6 +64,7 @@
       });
 
       google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
+        all_overlays.push(polygon);
         var polygonBounds = polygon.getPath();
         document.getElementById("location").innerText = JSON.stringify(polygonBounds.g)
       });
@@ -91,9 +96,40 @@
       return await fetch(request);
     }
     function submit(){
+      if(all_markers.length != 0) {
+        for(let x = 0; x < all_markers.length; x++)
+          all_markers[x].setMap(null)
+        all_markers = [];
+      }
       getVideos().then((value)=>{ 
-        value.json().then((data) => document.getElementById("response").innerHTML = JSON.stringify(data));
+        value.json().then((data) => {
+          document.getElementById("response").innerHTML = JSON.stringify(data);
+          data.forEach(data => MakeMarker(data));
+          for (var i=0; i < all_overlays.length; i++)
+          {
+            all_overlays[i].setMap(null);
+          }
+          all_overlays = [];
+        });
       });
+    }
+    function MakeMarker(object){
+      const marker = new google.maps.Marker({
+        position: object["location"],
+        map,
+        title: object["object"],
+        clickable: true,
+      })
+      marker.addListener("click", () => {
+        const infowindow = new google.maps.InfoWindow({
+          content: object["object"],
+        })
+        infowindow.open({
+          anchor: marker,
+          map,
+        })
+      })
+      all_markers.push(marker);
     }
     window.initMap = initMap;
     </script>
@@ -107,7 +143,7 @@
         <input type="datetime-local" id="datehi">
         <button onclick="submit()">Submit</button>
       </div>
-      <div id="response"></div>
+      <div id="response" hidden="true"></div>
       <div id="location" hidden="true"></div>
     </div>
   </div>
