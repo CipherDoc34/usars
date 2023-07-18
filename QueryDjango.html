@@ -28,6 +28,29 @@
     let map;
     let all_overlays = [];
     let all_markers = [];
+    let type_detected_object = [];
+    let object_type_list = {};
+    const OBJECT_ICONS = {
+        "train": "http://localhost/usars/MapIcons/train.png",
+        "clock": "http://localhost/usars/MapIcons/clock.png",
+        "traffic light": "http://localhost/usars/MapIcons/traffic_light.png",
+        "bus": "http://localhost/usars/MapIcons/bus.png",
+        "bicycle": "http://localhost/usars/MapIcons/bicycle.png",
+        "boat": "http://localhost/usars/MapIcons/boat.png",
+        "person": "http://localhost/usars/MapIcons/pedestrian.png",
+        "truck": "http://localhost/usars/MapIcons/truck.png",
+        "fire hydrant": "http://localhost/usars/MapIcons/fire_hydrant.png",
+        "stop sign": "http://localhost/usars/MapIcons/stop_sign.png",
+        "car": "http://localhost/usars/MapIcons/car.png",
+        "NONE": "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi3.png",
+    };
+    // Shapes define the clickable region of the icon. The type defines an HTML
+    // <area> element 'poly' which traces out a polygon as a series of X,Y points.
+    // The final coordinate closes the poly by connecting to the first coordinate.
+    let MarkerShape = {
+      coords: [1, 1, 1, 20, 18, 20, 18, 1],
+      type: "poly",
+    };
     function initMap() 
     {
       $('calander').hide();
@@ -85,7 +108,6 @@
       };
       let formdata = "";
       for(var prop in args) formdata += (prop + "=" + args[prop] + "&" );
-
       const request = new Request("http://localhost:8000/api/getpred", {
             method: "POST",
             body: formdata,
@@ -105,24 +127,57 @@
         value.json().then((data) => {
           document.getElementById("response").innerHTML = JSON.stringify(data);
           data.forEach(data => MakeMarker(data));
-          for (var i=0; i < all_overlays.length; i++)
-          {
-            all_overlays[i].setMap(null);
-          }
+          for (var i=0; i < all_overlays.length; i++) all_overlays[i].setMap(null);
           all_overlays = [];
+          // document.getElementById("oject_list").innerHTML = type_detected_object;
+          const select = document.createElement("select");
+          const itemALL = document.createElement("option");
+          itemALL.value = "all";
+          itemALL.innerHTML = "all";
+          select.appendChild(itemALL);
+          for(let x = 0; x < type_detected_object.length; x++){
+            const item = document.createElement("option");
+            item.value = type_detected_object[x];
+            item.innerHTML = type_detected_object[x];
+            select.appendChild(item);
+          }
+          select.onchange = filterItems;
+          document.getElementById("object_list").appendChild(select);
+          console.log(object_type_list);
         });
       });
     }
+    function filterItems(event){
+      let filtered = event.target.value;
+      for (let i = 0; i < all_markers.length; i++) all_markers[i].setVisible(false);
+      if (filtered != "all")
+      {
+        for (let i = 0; i < object_type_list[filtered].length; i++) object_type_list[filtered][i].setVisible(true);
+      }
+      else 
+      {
+        for (let i = 0; i < all_markers.length; i++) all_markers[i].setVisible(true);
+      }
+    }
     function MakeMarker(object){
+      let object_name = object["object"];
+      let IconURL = OBJECT_ICONS["NONE"];
+
+      if (type_detected_object.indexOf(object_name) === -1) type_detected_object.push(object_name);
+      if (!object_type_list.hasOwnProperty(object_name)) object_type_list[object_name] = [];
+      if (OBJECT_ICONS.hasOwnProperty(object_name)) IconURL = OBJECT_ICONS[object_name];
+
       const marker = new google.maps.Marker({
         position: object["location"],
         map,
-        title: object["object"],
+        icon: {url: IconURL},
+        //shape: MarkerShape,
+        title: object_name,
         clickable: true,
       })
       marker.addListener("click", () => {
         const infowindow = new google.maps.InfoWindow({
-          content: object["object"],
+          content: object_name,
         })
         infowindow.open({
           anchor: marker,
@@ -130,6 +185,7 @@
         })
       })
       all_markers.push(marker);
+      object_type_list[object_name].push(marker);
     }
     window.initMap = initMap;
     </script>
@@ -143,6 +199,7 @@
         <input type="datetime-local" id="datehi">
         <button onclick="submit()">Submit</button>
       </div>
+      <div id="object_list"></div>
       <div id="response" hidden="true"></div>
       <div id="location" hidden="true"></div>
     </div>
